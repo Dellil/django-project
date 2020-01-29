@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django_countries.fields import CountryField
 from core import models as core_models
 from users import models as user_models
@@ -58,7 +59,7 @@ class Photo(core_models.TimeStampedModel):
 
 class Room(core_models.TimeStampedModel):
     """ Room Model Definition """
-
+    
     name = models.CharField(max_length=140)
     description = models.TextField()
     country = CountryField()
@@ -88,6 +89,9 @@ class Room(core_models.TimeStampedModel):
     def save(self, *args, **kwargs):
         self.city = str.capitalize(self.city)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("rooms:detail", kwargs={"pk": self.pk})
 
     def total_rating(self):
         all_reviews = self.reviews.all()
