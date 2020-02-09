@@ -59,7 +59,7 @@ class Photo(core_models.TimeStampedModel):
 
 class Room(core_models.TimeStampedModel):
     """ Room Model Definition """
-    
+
     name = models.CharField(max_length=140)
     description = models.TextField()
     country = CountryField()
@@ -104,3 +104,7 @@ class Room(core_models.TimeStampedModel):
             average_score = round(all_ratings / len(all_reviews), 2)
 
         return average_score
+
+    def first_photo(self):
+        (photo,) = self.photos.all()[:1]
+        return photo.file.url
