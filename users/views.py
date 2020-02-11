@@ -4,6 +4,7 @@ from django.views.generic import FormView
 from django.urls import reverse_lazy
 from django.shortcuts import redirect, reverse
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 from django.core.files.base import ContentFile
 from . import forms, models
 
@@ -41,6 +42,7 @@ class LoginView(FormView):
 
 
 def log_out(request):
+    messages.info(request, f"See you later")
     logout(request)
     return redirect(reverse("core:home"))
 
@@ -49,11 +51,6 @@ class SignUpView(FormView):
     template_name = "users/signup.html"
     form_class = forms.SignUpForm
     success_url = reverse_lazy("core:home")
-    initial = {
-        "first_name": " Chan",
-        "last_name": "Jang",
-        "email": "aksaksdm@gmail.com",
-    }
 
     def form_valid(self, form):
         form.save()
@@ -110,8 +107,7 @@ def github_callback(request):
             error = result_json.get("error", None)
 
             if error is not None:
-                print(f"에러가 뭔가 있음 암튼 그럼 {error}")
-                raise GithubException
+                raise GithubException("Can't get access token")
             else:
                 access_token = result_json.get("access_token")
                 profile_request = requests.get(
@@ -130,7 +126,9 @@ def github_callback(request):
                     try:
                         user = models.User.objects.get(email=email)
                         if user.login_method != models.User.LOGIN_GITHUB:
-                            raise GithubException
+                            raise GithubException(
+                                f"Please log in with {user.login_method}"
+                            )
                     except models.User.DoesNotExist:
                         user = models.User.objects.create(
                             email=email,
@@ -142,15 +140,17 @@ def github_callback(request):
                         )
                         user.set_unusable_password()
                         user.save()
+                    messages.success(request, f"Welcome back {user.first_name}")
                     login(request, user)
+                    print("됐노")
                     return redirect(reverse("core:home"))
                 else:
-                    print("야 ㅋㅋ 유저 이름 없다는데?")
-                    raise GithubException
+                    raise GithubException("Can't get your profile")
         else:
-            raise GithubException
-    except GithubException:
+            raise GithubException("Can't get code")
+    except GithubException as e:
         # Send Error Message
+        messages.error(request, e)
         return redirect(reverse("users:login"))
 
 
@@ -178,7 +178,7 @@ def kakao_callback(request):
         error = token_json.get("error", None)
 
         if error is not None:
-            raise KakaoException
+            raise KakaoException("Can't get authorization code")
         access_token = token_json.get("access_token")
         profile_request = requests.get(
             "https://kapi.kakao.com/v2/user/me",
@@ -187,7 +187,7 @@ def kakao_callback(request):
         profile_json = profile_request.json()
         email = profile_json.get("kakao_account").get("email", None)
         if email is None:
-            raise KakaoException()
+            raise KakaoException("Please also give me your email")
         properties = profile_json.get("properties")
         nickname = properties.get("nickname")
         profile_image = properties.get("profile_image")
@@ -195,7 +195,7 @@ def kakao_callback(request):
         try:
             user = models.User.objects.get(email=email)
             if user.login_method != models.User.LOGIN_KAKAO:
-                raise KakaoException()
+                raise KakaoException(f"Please log in with: {user.login_method}")
         except models.User.DoesNotExist:
             user = models.User.objects.create(
                 email=email,
@@ -212,6 +212,8 @@ def kakao_callback(request):
                     f"{nickname}-avatar", ContentFile(photo_request.content)
                 )
         login(request, user)
+        messages.success(request, f"Welcome back {user.first_name}")
         return redirect(reverse("core:home"))
-    except KakaoException:
+    except KakaoException as e:
+        messages.error(request, e)
         return redirect(reverse("users:login"))
