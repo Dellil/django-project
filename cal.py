@@ -3,9 +3,11 @@ import calendar
 
 
 class Day:
-    def __init__(self, number, past):
+    def __init__(self, number, past, month, year):
         self.number = number
         self.past = past
+        self.month = month
+        self.year = year
 
     def __str__(self):
         return str(self.number)
@@ -41,7 +43,7 @@ class Calendar(calendar.Calendar):
                 today = now.day
                 month = now.month
                 is_past = day < today and self.month <= month
-                new_day = Day(day, is_past)
+                new_day = Day(number=day, past=is_past, month=self.month, year=self.year)
                 days.append(new_day)
         return days
 
