@@ -4,9 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pylint = "*"
-black = "*"
 flake8 = "*"
+awsebcli = "*"
 
 [packages]
 django = "==2.2.5"
