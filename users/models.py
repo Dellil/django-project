@@ -7,7 +7,6 @@ from django.db import models
 from django.utils.html import strip_tags
 from django.shortcuts import reverse
 from django.template.loader import render_to_string
-from core import models as core_models
 from core import managers
 
 
@@ -41,6 +40,7 @@ class User(AbstractUser):
     LOGIN_EMAIL = "email"
     LOGIN_GITHUB = "github"
     LOGIN_KAKAO = "kakao"
+    LOGIN_FACEBOOK = "facebook"
 
     LOGIN_CHOICES = (
         (LOGIN_EMAIL, "Email"),
