@@ -102,7 +102,7 @@ else:
             "NAME": os.environ.get("RDS_NAME"),
             "PASSWORD": os.environ.get("RDS_PASSWORD"),
             "PORT": "5432",
-            "USER": "postgresql",
+            "USER": "postgres",
         }
     }
 
